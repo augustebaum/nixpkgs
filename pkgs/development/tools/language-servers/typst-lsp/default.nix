@@ -27,6 +27,7 @@ rustPlatform.buildRustPackage rec {
 
   meta = with lib; {
     description = "A brand-new language server for Typst";
+    mainProgram = "typst-lsp";
     homepage = "https://github.com/nvarner/typst-lsp";
     changelog = "https://github.com/nvarner/typst-lsp/releases/tag/${src.rev}";
     license = with licenses; [ mit ];
