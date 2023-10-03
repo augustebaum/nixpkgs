@@ -3,25 +3,10 @@
 , ...
 }:
 with pkgs;
-with python3Packages; let
-  mkPluginCfg =
-    { name
-    , requires ? [ ]
-    , requiresUnpackaged ? [ ]
-    , optional ? [ ]
-    , warnings ? [ ]
-    ,
-    }: rec {
-      inherit name requires requiresUnpackaged optional;
-      warnings =
-        let
-          warn = dep: ''Plugin "${name}": Dependency `${dep}` is not known to be contained in Nixpkgs, so plugin might fail at runtime.'';
-          requiresUnpackagedWarnings = map warn requiresUnpackaged;
-        in
-        warnings ++ requiresUnpackagedWarnings;
-    };
-in
-map mkPluginCfg [
+with python3Packages;
+# - `requires` designates propagatedBuildInputs (runtime dependencies).
+# - `requiresUnpackaged` designates runtime dependencies that are not yet available on Nix-powered systems, and whose plugins are thus unsupported.
+[
   {
     name = "amixer";
     requires = [ alsa-utils ];

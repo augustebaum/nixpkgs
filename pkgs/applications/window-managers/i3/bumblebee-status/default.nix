@@ -55,7 +55,8 @@ python3Packages.buildPythonPackage rec {
 
   meta = with lib; {
     description = "bumblebee-status is a modular, theme-able status line generator for the i3 window manager.";
-    homepage = "https://bumblebee-status.readthedocs.io/";
+    homepage = "https://github.com/tobi-wan-kenobi/bumblebee-status";
+    mainProgram = "bumblebee-status";
     license = licenses.mit;
     platforms = platforms.linux;
     maintainers = with maintainers; [ augustebaum ];
