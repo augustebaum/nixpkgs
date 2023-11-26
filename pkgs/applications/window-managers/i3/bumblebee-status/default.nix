@@ -1,12 +1,20 @@
 { pkgs
 , lib
-, python3
-, python3Packages
+, glibcLocales
+, python
 , fetchFromGitHub
-, withPlugins ? [ ]
-, ...
+, plugins ? p: []
 }:
-python3Packages.buildPythonPackage rec {
+let
+  # { <name> = { name = "..."; propagatedBuildInputs = [ ... ]; buildInputs = [ ... ]; } }
+  allPlugins = lib.mapAttrs
+    (name: value: value // { inherit name; })
+    (import ./plugins.nix pkgs);
+
+  # [ { name = "..."; propagatedBuildInputs = [ ... ]; buildInputs = [ ... ]; } ]
+  selectedPlugins = plugins allPlugins;
+in
+python.pkgs.buildPythonPackage rec {
   pname = "bumblebee-status";
   version = "2.1.6";
 
@@ -17,30 +25,21 @@ python3Packages.buildPythonPackage rec {
     hash = "sha256-Oo7n3NyUxBedQHG5P7TM9nuI2hwnVN1SJcK9OP3yiyE=";
   };
 
-  propagatedBuildInputs =
-    let
-      allPlugins = import ./plugins.nix { inherit pkgs python3Packages; };
+  buildInputs = lib.concatMap (p: p.buildInputs or []) selectedPlugins;
+  propagatedBuildInputs = lib.concatMap (p: p.propagatedBuildInputs or []) selectedPlugins;
 
-      isSelected = plugin: builtins.elem plugin.name withPlugins;
-
-      selectedPlugins = lib.filter isSelected allPlugins;
-
-      pluginPropagatedBuildInputs = builtins.concatMap (p: p.requires) selectedPlugins;
-    in
-    pluginPropagatedBuildInputs;
-
-  checkInputs = with python3Packages; [ freezegun netifaces psutil pytest pytest-mock ];
+  checkInputs = with python.pkgs; [ freezegun netifaces psutil pytest pytest-mock ];
 
   checkPhase = ''
     runHook preCheck
 
     # Fixes `locale.Error: unsupported locale setting` in some tests.
-    export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive";
+    export LOCALE_ARCHIVE="${glibcLocales}/lib/locale/locale-archive";
 
     # FIXME: We skip the `dunst` module tests, some of which fail with
     # `RuntimeError: killall -s SIGUSR2 dunst not found`.
     # This is not solved by adding `pkgs.killall` to `checkInputs`.
-    ${python3.interpreter} -m pytest -k 'not test_dunst.py'
+    ${python.interpreter} -m pytest -k 'not test_dunst.py'
 
     runHook postCheck
   '';
@@ -50,7 +49,7 @@ python3Packages.buildPythonPackage rec {
     find $out -name "__pycache__" -type d | xargs rm -rv
 
     # Make themes available for bumblebee-status to detect them
-    cp -r ./themes $out/${python3.sitePackages}
+    cp -r ./themes $out/${python.sitePackages}
   '';
 
   meta = with lib; {

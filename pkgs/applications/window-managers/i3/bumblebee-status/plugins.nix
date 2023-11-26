@@ -4,8 +4,15 @@
 }:
 with pkgs;
 with python3Packages;
-# - `requires` designates propagatedBuildInputs (runtime dependencies).
-# - `requiresUnpackaged` designates runtime dependencies that are not yet available on Nix-powered systems, and whose plugins are thus unsupported.
+# propagatedBuildInputs -> python libraries and executables
+# buildInputs -> libraries
+{
+
+  amixer.propagatedBuildInputs = [ alsa-utils ];
+  layout.buildInputs = [ pkgs.xorg.libX11 ];
+
+}
+/*
 [
   {
     name = "amixer";
@@ -360,3 +367,4 @@ with python3Packages;
   }
   { name = "zpool"; }
 ]
+*/
